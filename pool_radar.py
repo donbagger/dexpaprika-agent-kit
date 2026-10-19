@@ -1,0 +1,111 @@
+"""pool-radar: post new liquidity pools to Discord, Telegram or the terminal.
+
+Every few minutes it asks DexPaprika for the newest pools on one network, skips the ones
+below a liquidity floor, and sends the rest with token symbols and a link. No model and no
+DexPaprika key are needed.
+
+    python pool_radar.py                      # watch, with settings from .env
+    python pool_radar.py --once               # one pass, then exit (for cron)
+    RADAR_NETWORK=solana python pool_radar.py
+
+Settings (environment or .env):
+    RADAR_NETWORK           network id, default base
+    RADAR_MIN_LIQUIDITY     USD floor, default 5000
+    RADAR_INTERVAL          seconds between passes, default 300
+    DISCORD_WEBHOOK_URL     post to a Discord channel
+    TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID   post to a Telegram chat
+"""
+
+import asyncio
+import json
+import os
+import sys
+import urllib.request
+
+from agentkit import call, dexpaprika, load_dotenv
+
+STATE_FILE = ".pool_radar_seen.json"
+
+
+def post(text: str) -> None:
+    """Send one message wherever the environment says. Prints when nothing is configured."""
+    discord = os.getenv("DISCORD_WEBHOOK_URL")
+    tg_token, tg_chat = os.getenv("TELEGRAM_BOT_TOKEN"), os.getenv("TELEGRAM_CHAT_ID")
+    if discord:
+        send(discord, {"content": text})
+    if tg_token and tg_chat:
+        send(f"https://api.telegram.org/bot{tg_token}/sendMessage",
+             {"chat_id": tg_chat, "text": text, "disable_web_page_preview": True})
+    if not discord and not (tg_token and tg_chat):
+        print(text + "\n")
+
+
+def send(url: str, body: dict) -> None:
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
+                                 headers={"Content-Type": "application/json", "User-Agent": "pool-radar"})
+    urllib.request.urlopen(req, timeout=15).close()
+
+
+def load_seen() -> dict[str, None]:
+    """Pool ids already handled, oldest first. A dict keeps insertion order, a set does not."""
+    try:
+        with open(STATE_FILE) as f:
+            return dict.fromkeys(json.load(f))
+    except (OSError, ValueError):
+        return {}
+
+
+def save_seen(seen: dict[str, None]) -> None:
+    with open(STATE_FILE, "w") as f:
+        json.dump(list(seen)[-2000:], f)
+
+
+async def scan(mcp, network: str, floor: float, seen: dict[str, None]) -> int:
+    """One pass: the 50 newest pools, filtered and posted. Returns how many were posted."""
+    newest = await call(mcp, "getNetworkPools", {
+        "network": network, "sort_by": "created_at", "sort_dir": "desc", "limit": 50,
+        "rationale": f"Pool radar checking for new pools on {network} to alert a channel.",
+    })
+    first_run = not seen
+    posted = 0
+    for pool in newest["results"]:
+        if pool["id"] in seen:
+            continue
+        seen[pool["id"]] = None
+        if first_run or (pool.get("liquidity_usd") or 0) < floor:
+            continue  # the first pass only learns what already exists
+        detail = await call(mcp, "getPoolDetails", {
+            "network": network, "pool_address": pool["id"],
+            "rationale": "Pool radar fetching token symbols for a new pool before alerting.",
+        })
+        pair = "/".join((t.get("symbol") or t["id"][:8]).strip() for t in detail.get("tokens", []))
+        post(
+            f"New pool on {network}: {pair} ({pool['dex_name']})\n"
+            f"Liquidity ${pool['liquidity_usd']:,.0f} · 24h volume ${pool.get('volume_usd_24h') or 0:,.0f} "
+            f"· {pool.get('transactions_24h') or 0} txns · created {pool['created_at']}\n"
+            f"https://dexpaprika.com/{network}/pool/{pool['id']}"
+        )
+        posted += 1
+    return posted
+
+
+async def main() -> None:
+    load_dotenv()
+    network = os.getenv("RADAR_NETWORK", "base")
+    floor = float(os.getenv("RADAR_MIN_LIQUIDITY", "5000"))
+    interval = int(os.getenv("RADAR_INTERVAL", "300"))
+    once = "--once" in sys.argv
+    seen = load_seen()
+    print(f"Watching {network} for new pools with at least ${floor:,.0f} liquidity.")
+    while True:
+        async with dexpaprika() as mcp:
+            posted = await scan(mcp, network, floor, seen)
+        save_seen(seen)
+        print(f"Pass done, {posted} posted, {len(seen)} pools known.")
+        if once:
+            return
+        await asyncio.sleep(interval)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
