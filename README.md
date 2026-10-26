@@ -13,7 +13,7 @@ calling: Nebius Token Factory, OpenRouter, OpenAI or a local Ollama.
 | [`pool_radar.py`](pool_radar.py) | Posts new liquidity pools on a network to Discord, Telegram or your terminal | no |
 | [`signal_agent.py`](signal_agent.py) | Reads RSI, MACD and Bollinger Bands for a watchlist and returns buy, sell or hold on paper | optional |
 
-Each one is a single file of 60 to 110 lines. The shared plumbing is in
+Each one is a single file of under 120 lines. The shared plumbing is in
 [`agentkit.py`](agentkit.py).
 
 ## Run it
