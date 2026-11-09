@@ -1,0 +1,6 @@
+# Direct dependencies. requirements.txt is generated from this file with hashes:
+#   uv pip compile requirements.in --universal --python-version 3.10 --generate-hashes -o requirements.txt
+mcp>=2.3,<3
+openai>=1.40,<4
+# imported directly by agentkit.py for timeouts and redirects; the MCP SDK also uses it
+httpx2>=2.14,<3

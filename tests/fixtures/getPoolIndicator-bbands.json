@@ -1,0 +1,26 @@
+{
+  "network": "ethereum",
+  "pool_address": "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+  "indicator": "bbands",
+  "interval": "1h",
+  "parameters": {
+    "period": 20,
+    "std_dev": 2
+  },
+  "data": [
+    {
+      "lower": 2065.104172788616,
+      "middle": 2170.5711556998895,
+      "timestamp": "2026-11-09T08:00:00Z",
+      "upper": 2276.038138611163
+    },
+    {
+      "lower": 2059.9614579740937,
+      "middle": 2164.216041176319,
+      "timestamp": "2026-11-09T09:00:00Z",
+      "upper": 2268.470624378544
+    }
+  ],
+  "has_next_page": false,
+  "next_cursor": ""
+}

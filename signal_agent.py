@@ -19,7 +19,7 @@ import asyncio
 import json
 import os
 
-from agentkit import call, dexpaprika, load_dotenv, model
+from agentkit import args, call, clean, dexpaprika, load_dotenv, model
 
 DEFAULT_POOLS = (
     "ethereum:0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640,"  # USDC/WETH, Uniswap V3
@@ -36,7 +36,7 @@ async def snapshot(mcp, network: str, pool: str, interval: str) -> dict:
     why = f"Signal agent reading {interval} indicators for a watchlist pool."
     detail = await call(mcp, "getPoolDetails", {"network": network, "pool_address": pool, "rationale": why})
     out = {
-        "pair": "/".join((t.get("symbol") or "?").strip() for t in detail.get("tokens", [])),
+        "pair": "/".join(clean(t.get("symbol") or "?").strip() for t in detail.get("tokens", [])),
         "network": network,
         "interval": interval,
     }
@@ -79,10 +79,22 @@ async def decide(s: dict) -> dict:
         return {"signal": "hold", "reason": f"Model reply was not JSON: {text[:120]}"}
 
 
+def parse_pools(text: str) -> list[tuple[str, str]]:
+    """'network:address,network:address' into pairs, with a clear message for a typo."""
+    pools = []
+    for item in (p.strip() for p in text.split(",") if p.strip()):
+        network, sep, address = item.partition(":")
+        if not sep or not network or not address:
+            raise SystemExit(f"SIGNAL_POOLS entries look like network:pool_address, got {item!r}")
+        pools.append((network.strip().lower(), address.strip()))
+    return pools
+
+
 async def main() -> None:
+    args(__doc__)
     load_dotenv()
     interval = os.getenv("SIGNAL_INTERVAL", "1h")
-    pools = [p.strip().split(":", 1) for p in os.getenv("SIGNAL_POOLS", DEFAULT_POOLS).split(",") if p.strip()]
+    pools = parse_pools(os.getenv("SIGNAL_POOLS", DEFAULT_POOLS))
     async with dexpaprika() as mcp:
         for network, pool in pools:
             s = await snapshot(mcp, network, pool, interval)

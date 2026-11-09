@@ -1,0 +1,115 @@
+{
+  "results": [
+    {
+      "id": "0x117e5c9bb8f1be074ebca39dd072668e5638bf2b",
+      "dex_id": "uniswap_v3",
+      "dex_name": "Uniswap V3",
+      "chain": "base",
+      "volume_usd_24h": 0.10530422992652425,
+      "created_at": "2026-11-09T09:39:42Z",
+      "created_at_block_number": 55134033,
+      "transactions_24h": 1,
+      "price_usd": 0,
+      "price_change_percentage_5m": 0,
+      "price_change_percentage_1h": 0,
+      "price_change_percentage_6h": 0,
+      "price_change_percentage_24h": 0,
+      "price_change_percentage_48h": 0,
+      "fee": null,
+      "volume_usd_7d": 0.10530422992652425,
+      "volume_usd_30d": 0.10530422992652425,
+      "liquidity_usd": 0.4081366235565697,
+      "tokens": [
+        {
+          "id": "0x4200000000000000000000000000000000000006",
+          "chain": "base",
+          "has_image": true,
+          "no_index": false
+        },
+        {
+          "id": "0x9e19a8d70bf551bd4ff1d463dfcbb01eb80b3df3",
+          "chain": "base",
+          "has_image": false,
+          "no_index": false
+        }
+      ]
+    },
+    {
+      "id": "0x93f2be7ae6ce4aa4f5c09e335bdaaab7915ab3ad6b6c5ffdbb14d01db98eb4cd",
+      "dex_id": "uniswap_v4",
+      "dex_name": "Uniswap V4",
+      "chain": "base",
+      "volume_usd_24h": 10.32300665614859,
+      "created_at": "2026-11-09T09:39:33Z",
+      "created_at_block_number": 55133989,
+      "transactions_24h": 3,
+      "price_usd": 0.0048492009829162,
+      "price_change_percentage_5m": 0,
+      "price_change_percentage_1h": 0,
+      "price_change_percentage_6h": 0,
+      "price_change_percentage_24h": -0.0000017604121957168196,
+      "price_change_percentage_48h": -0.0000017604121957168196,
+      "fee": null,
+      "volume_usd_7d": 10.32300665614859,
+      "volume_usd_30d": 10.32300665614859,
+      "liquidity_usd": 20.62443367018304,
+      "tokens": [
+        {
+          "id": "0x1111111111166b7fe7bd91427724b487980afc69",
+          "chain": "base",
+          "has_image": true,
+          "no_index": false
+        },
+        {
+          "id": "0xe74b854f6027cbc18b720373132f7c369f25c0bb",
+          "chain": "base",
+          "has_image": true,
+          "no_index": false
+        }
+      ]
+    },
+    {
+      "id": "0x64ba326cac653ad3b1e724868337df713efdfe361d8b9c412f887d2299df5766",
+      "dex_id": "uniswap_v4",
+      "dex_name": "Uniswap V4",
+      "chain": "base",
+      "volume_usd_24h": 13422.131561175116,
+      "created_at": "2026-11-09T09:38:13Z",
+      "created_at_block_number": 55133590,
+      "transactions_24h": 137,
+      "price_usd": 2107.835641276517,
+      "price_change_percentage_5m": 0,
+      "price_change_percentage_1h": 0.018795242249323017,
+      "price_change_percentage_6h": -0.0016530437529055659,
+      "price_change_percentage_24h": 0.039196574453085276,
+      "price_change_percentage_48h": 0.039196574453085276,
+      "fee": null,
+      "volume_usd_7d": 13422.131561175122,
+      "volume_usd_30d": 13422.131561175122,
+      "liquidity_usd": 2.0812368712272793,
+      "tokens": [
+        {
+          "id": "0x0000000000000000000000000000000000000000",
+          "chain": "base",
+          "has_image": true,
+          "no_index": false
+        },
+        {
+          "id": "0xb200000000000000000000adcacaf63095fd65ad",
+          "chain": "base",
+          "has_image": false,
+          "no_index": false
+        }
+      ]
+    }
+  ],
+  "has_next_page": true,
+  "next_cursor": "eyJjaGFpbiI6ImJhc2UiLCJmYWN0b3J5X2lkIjoiMHg0OTg1ODFmZjcxODkyMmMzZjhlNmEyNDQ5NTZhZjA5OWIyNjUyYjJiIiwiaWQiOiIweDY0YmEzMjZjYWM2NTNhZDNiMWU3MjQ4NjgzMzdkZjcxM2VmZGZlMzYxZDhiOWM0MTJmODg3ZDIyOTlkZjU3NjYiLCJzb3J0X2ZpZWxkIjoiY3JlYXRlZF9hdCIsInNvcnRfdGltZSI6IjIwMjYtMTEtMDlUMDk6Mzg6MTNaIn0",
+  "query": {
+    "network": "base",
+    "limit": 3,
+    "created_before": 1794217206,
+    "order_by": "created_at",
+    "sort": "desc"
+  }
+}

@@ -1,7 +1,8 @@
 name: daily
 
-# Runs every agent's DexPaprika calls against the live server, so the code in this repo is
-# known to work today and not only on the day it was written.
+# Offline tests on every push and pull request. Every morning, and on every push, smoke.py
+# also runs each agent's DexPaprika calls against the live server, so the code in this repo
+# is known to work today and not only on the day it was written.
 on:
   schedule:
     - cron: "17 6 * * *"
@@ -13,36 +14,70 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  smoke:
+  test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install --require-hashes -r requirements.txt
+      - run: python -m unittest -v
+
+  smoke:
+    # Not on pull requests: the keyless rate limit is shared, and a fork PR should not be
+    # able to spend it or fail on someone else's traffic.
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         python: ["3.10", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python }}
-      - run: pip install -r requirements.txt
+      - run: pip install --require-hashes -r requirements.txt
       - run: python smoke.py
 
   market-chat:
-    # Only where a model key is configured, so forks without one still go green.
+    # Only where a model key is configured, and never on pull requests, where fork code
+    # would run next to the model key.
+    if: github.event_name != 'pull_request'
+    needs: test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
       LLM_MODEL: ${{ vars.LLM_MODEL }}
       LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: env.LLM_API_KEY != ''
-      - uses: actions/setup-python@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         if: env.LLM_API_KEY != ''
         with:
           python-version: "3.13"
       - if: env.LLM_API_KEY != ''
-        run: pip install -r requirements.txt
+        run: pip install --require-hashes -r requirements.txt
       - if: env.LLM_API_KEY != ''
         run: python market_chat.py "What are the top 3 pools on Base by 24h volume? Give their addresses."

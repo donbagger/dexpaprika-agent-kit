@@ -39,7 +39,7 @@ async def main() -> None:
         await pool_radar.scan(mcp, "solana", 0, seen)
         check(len(seen) > 0, f"pool-radar sees {len(seen)} new pools on solana")
 
-        for network, pool in (p.split(":", 1) for p in signal_agent.DEFAULT_POOLS.split(",")):
+        for network, pool in signal_agent.parse_pools(signal_agent.DEFAULT_POOLS):
             s = await signal_agent.snapshot(mcp, network, pool, "1h")
             d = signal_agent.rule(s)
             check(

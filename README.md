@@ -1,11 +1,14 @@
 # DexPaprika agent kit
 
-[![daily](https://github.com/coinpaprika/dexpaprika-agent-kit/actions/workflows/daily.yml/badge.svg)](https://github.com/coinpaprika/dexpaprika-agent-kit/actions/workflows/daily.yml)
+[![daily](https://github.com/donbagger/dexpaprika-agent-kit/actions/workflows/daily.yml/badge.svg)](https://github.com/donbagger/dexpaprika-agent-kit/actions/workflows/daily.yml)
+[![Powered by DexPaprika](https://dexpaprika.com/badges/powered-by-dexpaprika.svg?t=bwt_qCURn2Q05rSVNkdE)](https://dexpaprika.com)
 
 Three small Python agents for on-chain DEX data, built on the hosted
 [DexPaprika MCP server](https://docs.dexpaprika.com/ai-integration/hosted-mcp-server).
-Nothing to install on the server side, no DexPaprika key, and any chat model with tool
-calling: Nebius Token Factory, OpenRouter, OpenAI or a local Ollama.
+They are standalone scripts, not a package: clone, install the requirements, run a file.
+You need no DexPaprika key to start. A chat model is needed only for `market_chat.py`
+(optional for `signal_agent.py`), and any model with tool calling works: Nebius Token
+Factory, OpenRouter, OpenAI or a local Ollama.
 
 | Agent | What it does | Needs a model |
 |---|---|---|
@@ -13,32 +16,37 @@ calling: Nebius Token Factory, OpenRouter, OpenAI or a local Ollama.
 | [`pool_radar.py`](pool_radar.py) | Posts new liquidity pools on a network to Discord, Telegram or your terminal | no |
 | [`signal_agent.py`](signal_agent.py) | Reads RSI, MACD and Bollinger Bands for a watchlist and returns buy, sell or hold on paper | optional |
 
-Each one is a single file of under 120 lines. The shared plumbing is in
+Each one is a single file of under 160 lines. The shared plumbing is in
 [`agentkit.py`](agentkit.py).
 
 ## Run it
 
 ```bash
-git clone https://github.com/coinpaprika/dexpaprika-agent-kit
+git clone https://github.com/donbagger/dexpaprika-agent-kit
 cd dexpaprika-agent-kit
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install --require-hashes -r requirements.txt
 
 python signal_agent.py                 # works right away, no keys
 RADAR_NETWORK=solana RADAR_MIN_LIQUIDITY=1000 python pool_radar.py
 ```
 
+`signal_agent.py` makes 5 tool calls per pool, 10 for its two default pools.
+`pool_radar.py` makes 1 per pass, plus 1 for each pool it posts.
+
 `signal_agent.py` prints something like this:
 
 ```
-USDC/WETH on ethereum: HOLD  RSI 75 with MACD histogram +5.624 gives no clear signal.
-  close 2435.782789  rsi 75.117398  macd hist 5.623632  bbands 2336.905021 / 2462.623493
+USDC/WETH on ethereum: HOLD  RSI 23 with MACD histogram -0.5149 gives no clear signal.
+  close 2104.404538  rsi 23.213031  macd hist -0.514865  bbands 2059.961458 / 2268.470624
+SOL/USDC on solana: HOLD  RSI 35 with MACD histogram -0.04008 gives no clear signal.
+  close 86.236724  rsi 34.630045  macd hist -0.040077  bbands 84.989814 / 90.43505
 ```
 
 For `market_chat.py`, and for model-written signals, add a model:
 
 ```bash
-cp .env.example .env    # then fill in one block: Nebius, OpenRouter, OpenAI or Ollama
+cp .env.example .env    # then uncomment one block and fill it in: Nebius, OpenRouter, OpenAI or Ollama
 python market_chat.py "What are the top 3 WETH pools on Ethereum by 24h volume?"
 python market_chat.py   # or chat interactively
 ```
@@ -80,17 +88,43 @@ everything else is in the [docs](https://docs.dexpaprika.com).
 On Ollama, start the server with `OLLAMA_CONTEXT_LENGTH=16384` or more. The tool descriptions
 do not fit in the default 4k context, and a model that cannot see them picks the wrong tools.
 
-## Daily check
+## Tests
 
-[`smoke.py`](smoke.py) runs every agent's DexPaprika calls against the live server without a
-model, and the [daily workflow](.github/workflows/daily.yml) runs it every morning. If the
+```bash
+python -m unittest -v   # offline: fake MCP session and model, recorded tool results
+python smoke.py         # live: every agent's DexPaprika calls, no model
+```
+
+The [daily workflow](.github/workflows/daily.yml) runs the offline tests on Python 3.10 to
+3.13 on every push, and [`smoke.py`](smoke.py) against the live server on every push to
+`main` and every morning. If the
 badge at the top is green, the code here works today.
+
+## Safety
+
+- The model can only call the tools in `TOOLS`. Tool results are data from the internet,
+  token names included, so an instruction hidden in one cannot reach any other tool.
+- `DEXPAPRIKA_API_KEY` is only ever sent to `https://mcp.dexpaprika.com`. Point
+  `DEXPAPRIKA_MCP_URL` anywhere else and the kit refuses to start with a key set.
+- Alerts from `pool_radar.py` go out as plain text with mentions turned off, so a token
+  called `@everyone` cannot ping your Discord.
+- The Telegram bot token is part of Telegram's API URL. pool-radar never prints or logs
+  that URL, even when a post fails, and no webhook post follows a redirect.
+- Every connection has explicit timeouts and refuses redirects.
+- Dependencies are pinned with hashes and CI actions to commit SHAs. More in
+  [SECURITY.md](SECURITY.md).
+
+Coding agents working on this repo should read [AGENTS.md](AGENTS.md) first.
 
 ## Also
 
 - [dexpaprika-mcp](https://github.com/coinpaprika/dexpaprika-mcp): the MCP server, to run
   locally with `npx dexpaprika-mcp@latest` or add to Claude, Cursor and other MCP clients
 - [DexPaprika docs](https://docs.dexpaprika.com): the REST API behind it
+- [pool-pulse](https://github.com/donbagger/pool-pulse): the most traded pools on a network,
+  a Node CLI on the REST API
+- [pool-depth](https://github.com/donbagger/pool-depth): is a pool deep enough for your trade,
+  in Python on the official SDK
 
 The signals are an example of wiring indicators into an agent. They are not trading advice,
 and nothing here places orders.

@@ -1,0 +1,21 @@
+{
+  "network": "ethereum",
+  "pool_address": "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+  "indicator": "rsi",
+  "interval": "1h",
+  "parameters": {
+    "period": 14
+  },
+  "data": [
+    {
+      "timestamp": "2026-11-09T08:00:00Z",
+      "value": 24.63756386866858
+    },
+    {
+      "timestamp": "2026-11-09T09:00:00Z",
+      "value": 23.213030927685395
+    }
+  ],
+  "has_next_page": false,
+  "next_cursor": ""
+}

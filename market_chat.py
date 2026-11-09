@@ -11,7 +11,7 @@ import asyncio
 import sys
 from datetime import date
 
-from agentkit import chat, dexpaprika, load_dotenv, openai_tools
+from agentkit import args, chat, dexpaprika, load_dotenv, model, openai_tools
 
 # The tools a market question needs. The server has more (filters, per-DEX lists, swaps);
 # a shorter list keeps the prompt small enough for local models. Add names here to widen it.
@@ -33,8 +33,9 @@ Today is {date.today().isoformat()}.
 
 
 async def main() -> None:
+    question = " ".join(args(__doc__, free_text=True)).strip()
     load_dotenv()
-    question = " ".join(sys.argv[1:]).strip()
+    model()  # stop on a missing LLM_MODEL here, before a connection is open
     async with dexpaprika() as mcp:
         tools = await openai_tools(mcp, only=TOOLS)
         messages = [{"role": "system", "content": SYSTEM}]

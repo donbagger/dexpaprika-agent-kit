@@ -1,0 +1,27 @@
+{
+  "network": "ethereum",
+  "pool_address": "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+  "indicator": "macd",
+  "interval": "1h",
+  "parameters": {
+    "fast_period": 12,
+    "signal_period": 9,
+    "slow_period": 26
+  },
+  "data": [
+    {
+      "histogram": -1.0372699396016785,
+      "macd": -37.35158925626047,
+      "signal": -36.31431931665879,
+      "timestamp": "2026-11-09T08:00:00Z"
+    },
+    {
+      "histogram": -0.5148646373240311,
+      "macd": -36.957900113313826,
+      "signal": -36.443035475989795,
+      "timestamp": "2026-11-09T09:00:00Z"
+    }
+  ],
+  "has_next_page": false,
+  "next_cursor": ""
+}
