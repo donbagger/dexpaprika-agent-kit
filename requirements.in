@@ -3,4 +3,4 @@
 mcp>=2.3,<3
 openai>=1.40,<4
 # imported directly by agentkit.py for timeouts and redirects; the MCP SDK also uses it
-httpx2>=2.14,<3
+httpx2>=2.16.2,<3
